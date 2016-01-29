@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HTTP服务测试工具 - devtools</title>
+    <style media="screen">
+        body {
+            font-family: 'Microsoft Yahei', sans-serif;
+        }
+
+        input[type="text"] {
+            padding: 6px;
+            font-size: inherit;
+            width: 600px;
+        }
+
+        .send-request {
+            text-decoration: none;
+            cursor: pointer;
+            color: #FFF;
+            background-color: #089C1B;
+            padding: 6px 10px;
+            display: inline-block;
+            margin-right: 20px;
+            transition: background-color 1s;
+            border-radius: 6px;
+        }
+
+        .send-request:hover {
+            background-color: #00730F;
+        }
+
+        .panel {
+            display: inline-block;
+            width: 48%;
+        }
+
+        .panel.right {
+            vertical-align: top;
+            border: 1px solid #CCC;
+            min-height: 700px;
+        }
+
+        .panel.right .title {
+            background-color: #E6E6E6;
+            padding: 4px;
+            border-bottom: 1px solid #CCC;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="panel left">
+        <div class="title">HTTP服务测试工具</div>
+        <div class="">
+            <div class="">URL:
+                <input type="text" name="url" placeholder="http://www.example.com/get">
+            </div>
+            <div class="">请求方式:
+                <select name="method">
+                    <option value="GET" selected="selected">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                </select>
+            </div>
+            <div class=""><a class="send-request">发送请求</a></div>
+        </div>
+    </div>
+    <div class="panel right">
+        <div class="title">历史记录</div>
+        <div class="">
+        </div>
+    </div>
+</body>
+
+</html>

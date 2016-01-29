@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <title>HTTP服务实时日志 - devtools</title>
+    <link rel="stylesheet" href="/pure-min.css">
+    <style>
+        pre {
+            white-space: normal;
+        }
+
+        code {
+            white-space: pre;
+            font-family: 'Fira Mono', consolas;
+        }
+
+        .left {
+            width: 240px;
+            box-shadow: 2px 2px 4px #000;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background-color: #FFF;
+        }
+
+        .left a {
+            display: block;
+            text-decoration: none;
+            background-color: #FFE3AB;
+            margin: 8px;
+            padding: 6px;
+            color: #007D17;
+        }
+
+        .main {
+            margin-left: 300px;
+        }
+
+        .record {
+            background-color: #F5F5DC;
+            min-width: 600px;
+            margin-bottom: 12px;
+        }
+
+        th,
+        td {
+            border: 1px solid #BEBEBE;
+            padding: 2px 8px;
+        }
+
+        th {
+            text-align: left;
+            width: 100px;
+            white-space: nowrap;
+        }
+
+        .timestamp {
+            background-color: #D8D8D8;
+        }
+
+        .help {
+            font-weight: normal;
+            margin-left: 200px;
+            text-decoration: none;
+            border-bottom: 1px solid #547EFF;
+            color: #547EFF;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="/jquery.min.js"></script>
+    <div class="left">
+        <h3>日志中记录的客户端：</h3>
+    </div>
+    <div class="main">
+        <h3><span class="client" style="color: #007D17;"></span> 的请求日志<span style="font-weight: normal; font-size: 90%;">(按时间降序排列，自动刷新)</span>:<a href="/http.log/help.html" class="help">怎么使用？</a></h3>
+        <div class="ctn"></div>
+        <table class="record">
+            <tr>
+                <th colspan="2" class="timestamp"></th>
+            </tr>
+            <tr>
+                <th class="method" style="text-transform: uppercase;"></th>
+                <td>
+                    <code class="url"></code>
+                </td>
+            </tr>
+            <tr>
+                <th>请求参数</th>
+                <td>
+                    <pre>
+                        <code class="params"></code>
+                    </pre>
+                </td>
+            </tr>
+            <tr>
+                <th class="status"></th>
+                <td>
+                    <pre>
+                        <code class="response"></code>
+                    </pre>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="right: 0; color: #969595; font-size: 80%;position: fixed;bottom: 0;padding: 4px;">author: Wang Yujian &lt;simpleelegant@163.com&gt;</div>
+
+    <script>
+        if (typeof(Object.defineProperty) === 'undefined' || typeof WebSocket === "undefined" || typeof JSON === 'undefined') {
+            alert('请升级您的浏览器。');
+        }
+
+        (function() {
+            function formatTime(timeStamp) {
+                var d = new Date(parseInt(timeStamp)),
+                    z = '',
+                    t = d.getHours();
+
+                z += (t < 10 ? '0' : '') + t;
+                t = d.getMinutes();
+                z += (t < 10 ? ':0' : ':') + t;
+                t = d.getSeconds();
+                z += (t < 10 ? ':0' : ':') + t;
+
+                return z + '.' + d.getMilliseconds();
+            }
+
+            var pallete = {
+                currentColor: '#FFF3DB',
+                colors: ['#FFF3DB', '#F0DBFF', '#DBEAFF', '#FFDBE6', '#DBFFDF'],
+                timer: null,
+                delayChangeColor: function(ms) {
+                    if (pallete.timer) {
+                        clearTimeout(pallete.timer);
+                    }
+                    pallete.timer = setTimeout(function() {
+                        var colors = pallete.colors.filter(function(c) {
+                            return (c !== pallete.currentColor);
+                        });
+                        pallete.currentColor = colors[Math.floor(Math.random() * colors.length)];
+                    }, ms);
+                }
+            };
+
+            var client = decodeURIComponent(location.search.substr(location.search.indexOf('=') + 1)),
+                clients = [],
+                $ctn = $('.ctn'),
+                $tmpl = $('.main .record').remove(),
+                socket = new WebSocket('ws://' + location.host + location.pathname + '/ws');
+
+            $('.main .client').text(client);
+
+            socket.onclose = function(e) {
+                $('body').html('<p style="text-align: center; font-size: 200%; color: #A7A7A7; margin: 100px;">连接不上服务器，请刷新页面试试。</p>');
+            };
+
+            socket.onmessage = function(e) {
+                var data = JSON.parse(e.data);
+
+                if (clients.indexOf(data.client) === -1) {
+                    clients.push(data.client);
+                    $('<a href="' + location.pathname + '?client=' + encodeURIComponent(data.client) + '"></a>').text(data.client).appendTo($('.left'));
+                }
+
+                if (data.client !== client) {
+                    return;
+                }
+
+                var $row = $tmpl.clone(true);
+
+                $row.find('.timestamp').text(formatTime(data.timeStamp));
+                $row.find('.method').text(data.method);
+                $row.find('.url').text(data.url);
+                $row.find('.status').text(data.statusCode);
+
+                try {
+                    data.params = JSON.parse(data.params);
+                    data.params = JSON.stringify(data.params, null, '    ');
+                } catch (e) {}
+
+                $row.find('.params').text(data.params);
+
+                try {
+                    data.responseBody = JSON.parse(data.responseBody);
+                    data.responseBody = JSON.stringify(data.responseBody, null, '    ');
+                } catch (e) {}
+
+                $row.find('.response').text(data.responseBody);
+                $row.css('background-color', pallete.currentColor);
+                pallete.delayChangeColor(500);
+                $row.prependTo($ctn);
+            };
+        })();
+    </script>
+
+</body>
+
+</html>
