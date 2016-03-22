@@ -21,4 +21,8 @@ _testmain.go
 
 *.exe
 
-gin-bin
+/gin-bin
+/devtools_linux_amd64
+/devtools_linux_386
+/devtools_darwin_amd64
+/devtools_darwin_386
