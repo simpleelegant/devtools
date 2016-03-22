@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>文档服务 - devtools</title>
+    <style media="screen">
+        body {
+            font-family: 'Microsoft Yahei', sans-serif;
+        }
+
+        a {
+            cursor: pointer;
+            text-decoration: none;
+            color: #08C;
+            padding: 6px 10px;
+            display: inline-block;
+            margin-right: 20px;
+            font-size: 20px;
+        }
+
+        a:hover {
+            background-color: #EEE;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="/jquery.min.js"></script>
+
+    <h3>管理员配置了以下几份项目文档：</h3>
+    <div class="list">
+
+    </div>
+    <script type="text/javascript">
+        $.get('/documents_service/project-list', function(data) {
+            var $list = $('.list');
+            if (data && data.length) {
+                data.forEach(function(li) {
+                    $list.append('<a data-project="' + li + '">' + li + '</a>');
+                });
+            }
+
+            $list.find('a').click(function() {
+                location.href = '/documents_service/document.html?project=' + $(this).data('project');
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -77,7 +77,7 @@
         <h3>日志中记录的客户端：</h3>
     </div>
     <div class="main">
-        <h3><span class="client" style="color: #007D17;"></span> 的请求日志<span style="font-weight: normal; font-size: 90%;">(按时间降序排列，自动刷新)</span>:<a href="/http.log/help.html" class="help">怎么使用？</a></h3>
+        <h3><span class="client" style="color: #007D17;"></span> 的请求日志<span style="font-weight: normal; font-size: 90%;">(按时间降序排列，自动刷新)</span>:<a href="/http_log/help.html" class="help">怎么使用？</a></h3>
         <div class="ctn"></div>
         <table class="record">
             <tr>
@@ -151,7 +151,7 @@
                 clients = [],
                 $ctn = $('.ctn'),
                 $tmpl = $('.main .record').remove(),
-                socket = new WebSocket('ws://' + location.host + location.pathname + '/ws');
+                socket = new WebSocket('ws://' + location.host + '/http_log/ws');
 
             $('.main .client').text(client);
 

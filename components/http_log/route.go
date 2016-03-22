@@ -10,19 +10,19 @@ import (
 
 // Route register routes
 func Route(r *gin.Engine) {
-	r.GET("/http.log", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "./components/http.log/index.html")
+	r.GET("/http_log/", func(c *gin.Context) {
+		http.ServeFile(c.Writer, c.Request, "./components/http_log/index.html")
 	})
 
-	r.GET("/http.log/help.html", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "./components/http.log/help.html")
+	r.GET("/http_log/help.html", func(c *gin.Context) {
+		http.ServeFile(c.Writer, c.Request, "./components/http_log/help.html")
 	})
 
-	r.GET("/http.log/ws", func(c *gin.Context) {
+	r.GET("/http_log/ws", func(c *gin.Context) {
 		websocket.ConnectHandler(c.Writer, c.Request)
 	})
 
-	r.POST("/http.log/log", func(c *gin.Context) {
+	r.POST("/http_log/log", func(c *gin.Context) {
 		f := c.Request
 
 		client := f.FormValue("client")

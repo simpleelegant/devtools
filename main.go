@@ -1,29 +1,38 @@
+// 开发工具套件
 package main
 
 import (
+	"fmt"
 	"yujian/devtools/components/index"
+	"yujian/devtools/plugins/conf"
 
-	"yujian/devtools/components/http.log"
-	"yujian/devtools/components/http.request"
+	a "yujian/devtools/components/documents_service"
+	b "yujian/devtools/components/http_log"
+	c "yujian/devtools/components/http_request"
 
 	"github.com/gin-gonic/gin"
+	"github.com/skratchdot/open-golang/open"
 )
 
 func main() {
-	// gin.SetMode(gin.ReleaseMode)
+	conf.Load("./config.json")
+
+	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
-
-	// register routes
 	{
 		index.Route(r)
-		httplog.Route(r)
-		httprequest.Route(r)
+		a.Route(r)
+		b.Route(r)
+		c.Route(r)
 	}
 
-	addr := "0.0.0.0:9900"
+	addr := fmt.Sprintf("0.0.0.0:%v", conf.Options.Port)
+	fmt.Println("Listening and serving HTTP on ", addr)
 
-	println("Listening and serving HTTP on " + addr)
+	if conf.Options.AutoOpenBrowser {
+		open.Start("http://" + addr)
+	}
 
 	// Start the server
 	if err := r.Run(addr); err != nil {

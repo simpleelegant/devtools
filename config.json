@@ -1,0 +1,8 @@
+{
+    "Port": 9990,
+    "AutoOpenBrowser": true,
+    "DocumentsService": [{
+        "Project": "某某项目",
+        "Path": "./temp"
+    }]
+}

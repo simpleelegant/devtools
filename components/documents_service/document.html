@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>文档服务 - devtools</title>
+    <style media="screen">
+        body {
+            font-family: 'Microsoft Yahei', sans-serif;
+            font-size: 14px;
+        }
+
+        #main {
+            float: left;
+            width: 70%;
+            box-sizing: border-box;
+            padding: 24px;
+        }
+
+        #main .title {
+            margin-bottom: 60px;
+        }
+
+        #main .project,
+        #main .file {
+            border: 1px solid #CCC;
+            font-size: 20px;
+            padding: 4px;
+            border-radius: 6px;
+            background-color: #E8E8E8;
+        }
+
+        #main code {
+            color: #F00;
+        }
+
+        #main pre {
+            border: 1px solid #ddd;
+            overflow: auto;
+        }
+
+        #main pre code {
+            font-size: 100%;
+            line-height: 18px;
+            display: block;
+            padding: 4px 12px;
+            margin: 0;
+            background-color: #FFFCF8;
+            color: #4D4E53;
+        }
+
+        .nav {
+            float: right;
+            width: 30%;
+            margin-top: 28px;
+            border-left: 1px solid #ccc;
+            padding-left: 16px;
+            box-sizing: border-box;
+        }
+
+        .nav .title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .nav a {
+            display: block;
+            text-decoration: none;
+            color: #4D4E53;
+            line-height: 18px;
+            margin-top: 6px;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="/jquery.min.js"></script>
+    <div class="nav">
+        <div class="title">文档列表</div>
+        <div class="docs">
+
+        </div>
+    </div>
+    <div id="main">
+        <div class="title">项目：<span class="project"></span> 文件：<span class="file"></span></div>
+        <div class="content"></div>
+    </div>
+    <script type="text/javascript">
+        $.get('/documents_service/project-doc' + location.search, function(data) {
+            if (data.Error) {
+                $('.content').html('<div style="font-size:30px;color:#AAA;">'+data.Error+'</div>');
+            }
+
+            if (data.Project) {
+                $('.project').html(data.Project);
+            }
+            if (data.File) {
+                $('.file').html(data.File);
+            }
+
+            if (data.Content) {
+                $('.content').html(data.Content);
+            }
+        });
+
+        $.get('/documents_service/project-doc-list' + location.search, function(data) {
+            if (data.Error) {
+                alert(data.Error);
+                return;
+            }
+
+            var $docs = $('.docs');
+            data.Files.forEach(function (file) {
+                $docs.append('<a href="document.html?project='+data.Project+'&file='+file+'">'+file+'</a>');
+            });
+        });
+    </script>
+</body>
+
+</html>
