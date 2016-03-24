@@ -8,6 +8,9 @@
     <title>HTTP服务实时日志 - devtools</title>
     <link rel="stylesheet" href="/pure-min.css">
     <style>
+        a {
+            text-decoration: none;
+        }
         pre {
             white-space: normal;
         }
@@ -22,7 +25,7 @@
             box-shadow: 2px 2px 4px #000;
             position: fixed;
             left: 0;
-            top: 0;
+            top: 60px;
             background-color: #FFF;
         }
 
@@ -73,11 +76,12 @@
 
 <body>
     <script src="/jquery.min.js"></script>
+    <p style="padding-left: 2em;margin-bottom:0;"><a href="../">&lt; 返回</a></p>
     <div class="left">
         <h3>日志中记录的客户端：</h3>
     </div>
     <div class="main">
-        <h3><span class="client" style="color: #007D17;"></span> 的请求日志<span style="font-weight: normal; font-size: 90%;">(按时间降序排列，自动刷新)</span>:<a href="/http_log/help.html" class="help">怎么使用？</a></h3>
+        <h3><span class="title" style="visibility:hidden;"><span class="client" style="color: #007D17;"></span> 的请求日志<span style="font-weight: normal; font-size: 90%;">(按时间降序排列，自动刷新)</span>:</span><a href="/http_log/help.html" class="help">怎么使用？</a></h3>
         <div class="ctn"></div>
         <table class="record">
             <tr>
@@ -153,7 +157,10 @@
                 $tmpl = $('.main .record').remove(),
                 socket = new WebSocket('ws://' + location.host + '/http_log/ws');
 
-            $('.main .client').text(client);
+            if (client) {
+                $('.main .client').text(client);
+                $('.main h3 .title').css('visibility', 'visible');
+            }
 
             socket.onclose = function(e) {
                 $('body').html('<p style="text-align: center; font-size: 200%; color: #A7A7A7; margin: 100px;">连接不上服务器，请刷新页面试试。</p>');

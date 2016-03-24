@@ -10,10 +10,12 @@
         body {
             font-family: 'Microsoft Yahei', sans-serif;
         }
-
         a {
-            cursor: pointer;
             text-decoration: none;
+        }
+
+        .list a {
+            cursor: pointer;
             color: #08C;
             padding: 6px 10px;
             display: inline-block;
@@ -29,10 +31,10 @@
 
 <body>
     <script src="/jquery.min.js"></script>
-
-    <h3>管理员配置了以下几份项目文档：</h3>
-    <div class="list">
-
+    <p style="padding-left: 2em;margin-bottom:0;"><a href="../">&lt; 返回</a></p>
+    <div style="width: 900px; margin: auto;">
+        <h3>管理员配置了以下几份文档：</h3>
+        <div class="list"> </div>
     </div>
     <script type="text/javascript">
         $.get('/documents_service/project-list', function(data) {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"path"
 	"strings"
 
 	"yujian/devtools/plugins/conf"
@@ -34,7 +35,7 @@ func Route(r *gin.Engine) {
 
 	r.GET("/documents_service/project-doc-list", func(c *gin.Context) {
 		project := c.Query("project")
-		path, err := getPath(project)
+		path, err := getProjectPath(project)
 		if err != nil {
 			c.JSON(http.StatusOK, map[string]interface{}{"Error": err.Error()})
 			return
@@ -66,28 +67,26 @@ func Route(r *gin.Engine) {
 			return
 		}
 
-		path, err := getPath(project)
+		projectPath, err := getProjectPath(project)
 		if err != nil {
 			c.JSON(http.StatusOK, map[string]interface{}{"Error": err.Error()})
 			return
 		}
 
-		content, err := getMarkdownFileToHTML(path, file)
+		filePath, err := getFilePath(projectPath, file)
 		if err != nil {
-			c.JSON(http.StatusOK, map[string]interface{}{"Error": err.Error()})
+			c.JSON(http.StatusOK, map[string]interface{}{
+				"Error":   err.Error(),
+				"Project": project,
+			})
 			return
 		}
 
-		c.JSON(http.StatusOK, map[string]interface{}{
-			"Error":   "",
-			"Project": project,
-			"File":    file,
-			"Content": string(blackfriday.MarkdownCommon([]byte(content))),
-		})
+		responseFile(c, project, file, filePath)
 	})
 }
 
-func getPath(project string) (string, error) {
+func getProjectPath(project string) (string, error) {
 	for _, v := range conf.Options.DocumentsService {
 		if v.Project == project {
 			return v.Path, nil
@@ -97,15 +96,53 @@ func getPath(project string) (string, error) {
 	return "", errors.New("指定的项目不存在")
 }
 
-func getMarkdownFileToHTML(dir, file string) (string, error) {
-	if !strings.HasSuffix(dir, "/") {
-		dir += "/"
+func getFilePath(projectPath, file string) (string, error) {
+	if !strings.HasSuffix(projectPath, "/") {
+		projectPath += "/"
 	}
 
-	data, err := ioutil.ReadFile(dir + file)
-	if err != nil {
+	filePath := projectPath + file
+	if _, err := ioutil.ReadFile(filePath); err != nil {
 		return "", errors.New(file + " 不存在")
 	}
 
-	return string(data), nil
+	return filePath, nil
+}
+
+func responseFile(c *gin.Context, project, file, filePath string) {
+	var err, content string
+
+	switch strings.ToLower(path.Ext(file)) {
+	case ".md", ".markdown":
+		data, _ := ioutil.ReadFile(filePath)
+		content = string(blackfriday.MarkdownCommon(data))
+		goto JSON
+	case ".png", ".jpg", ".jpeg", ".gif":
+		if c.Query("binary") == "" {
+			content = `<img src="` + c.Request.URL.String() + `&binary=1">`
+			goto JSON
+		}
+
+		c.File(filePath)
+		return
+	case ".html", ".htm":
+		if c.Query("binary") == "" {
+			content = `<iframe src="` + c.Request.URL.String() + `&binary=1">点这里在新窗口打开此文件</iframe>`
+			goto JSON
+		}
+
+		c.File(filePath)
+		return
+	default:
+		err = "此文件不支持在线查看"
+		goto JSON
+	}
+
+JSON:
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"Error":   err,
+		"Project": project,
+		"File":    file,
+		"Content": content,
+	})
 }

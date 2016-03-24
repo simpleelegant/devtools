@@ -12,11 +12,21 @@
             font-size: 14px;
         }
 
+        a {
+            text-decoration: none;
+        }
+
+        iframe {
+            width: 100%;
+            height: 800px;
+        }
+
         #main {
             float: left;
             width: 70%;
             box-sizing: border-box;
             padding: 24px;
+            padding-top: 0;
         }
 
         #main .title {
@@ -49,6 +59,10 @@
             margin: 0;
             background-color: #FFFCF8;
             color: #4D4E53;
+        }
+
+        #main img {
+            max-width: 100%;
         }
 
         .nav {
@@ -88,38 +102,54 @@
         </div>
     </div>
     <div id="main">
-        <div class="title">项目：<span class="project"></span> 文件：<span class="file"></span></div>
+        <p><a href="./">&lt; 返回</a></p>
+        <div class="title">项目：<span class="project"></span> <span class="file-title" style="display:none;">文档：<span class="file"></span></span>
+        </div>
         <div class="content"></div>
     </div>
     <script type="text/javascript">
-        $.get('/documents_service/project-doc' + location.search, function(data) {
-            if (data.Error) {
-                $('.content').html('<div style="font-size:30px;color:#AAA;">'+data.Error+'</div>');
+        (function() {
+            function showError(error) {
+                $('<div style="font-size: 3em; color: #CECECE; text-align: center;padding-top: 3em;"></div>').text(error).appendTo($('.content'));
             }
 
-            if (data.Project) {
-                $('.project').html(data.Project);
-            }
-            if (data.File) {
-                $('.file').html(data.File);
-            }
+            $.get('/documents_service/project-doc-list' + location.search, function(data) {
+                if (data.Error) {
+                    showError(data.Error);
+                    return;
+                }
 
-            if (data.Content) {
-                $('.content').html(data.Content);
-            }
-        });
+                if (data.Project) {
+                    $('.project').text(data.Project);
+                }
 
-        $.get('/documents_service/project-doc-list' + location.search, function(data) {
-            if (data.Error) {
-                alert(data.Error);
-                return;
-            }
+                if (!data.Files || !data.Files.length) {
+                    showError("没有文档可显示");
+                    return;
+                }
 
-            var $docs = $('.docs');
-            data.Files.forEach(function (file) {
-                $docs.append('<a href="document.html?project='+data.Project+'&file='+file+'">'+file+'</a>');
+                var $docs = $('.docs');
+                data.Files.forEach(function(file) {
+                    $docs.append('<a href="document.html?project=' + data.Project + '&file=' + file + '">' + file + '</a>');
+                });
+
+                // load document details
+                $.get('/documents_service/project-doc' + location.search, function(data) {
+                    if (data.Error) {
+                        showError(data.Error);
+                    }
+
+                    if (data.File) {
+                        $('.file').text(data.File);
+                        $('.file-title').show();
+                    }
+
+                    if (data.Content) {
+                        $('.content').html(data.Content);
+                    }
+                });
             });
-        });
+        })();
     </script>
 </body>
 

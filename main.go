@@ -15,8 +15,8 @@ import (
 )
 
 func main() {
+	chdir()
 	conf.Load("./config.json")
-
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()

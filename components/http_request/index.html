@@ -9,6 +9,17 @@
     <style media="screen">
         body {
             font-family: 'Microsoft Yahei', sans-serif;
+            margin: 0;
+        }
+
+        a {
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        label {
+            display: inline-block;
+            width: 120px;
         }
 
         input[type="text"] {
@@ -17,7 +28,54 @@
             width: 600px;
         }
 
-        .send-request {
+        textarea {
+            vertical-align: text-top;
+            width: 600px;
+            height: 400px;
+            padding: 6px;
+        }
+
+        form > div {
+            margin-bottom: 8px;
+        }
+
+        .panel {
+            display: inline-block;
+            width: 49%;
+            padding: 0 8px;
+        }
+
+        .panel .title {
+            font-weight: bold;
+            margin: 0 0 8px 60px;
+            font-size: 120%;
+        }
+
+        .history-ctn {
+            position: absolute;
+            top:8px;
+            bottom: 8px;
+            right: 8px;
+            width: 50%;
+
+            border: 1px solid #CCC;
+        }
+
+        .history-ctn .title {
+            background-color: #E6E6E6;
+            padding: 4px;
+            border-bottom: 1px solid #CCC;
+        }
+        .history {
+            position: absolute;
+            top:30px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            overflow-y: scroll;
+        }
+
+        .send {
             text-decoration: none;
             cursor: pointer;
             color: #FFF;
@@ -29,52 +87,164 @@
             border-radius: 6px;
         }
 
-        .send-request:hover {
+        .send:hover {
             background-color: #00730F;
         }
-
-        .panel {
+        .clear-form {
             display: inline-block;
-            width: 48%;
+            background-color: #DCDCDC;
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: #7B7B7B;
+            margin-left: 450px;
         }
 
-        .panel.right {
-            vertical-align: top;
-            border: 1px solid #CCC;
-            min-height: 700px;
+        .time {
+            display: inline-block;
+            width: 120px;
+            color: #F00;
         }
-
-        .panel.right .title {
-            background-color: #E6E6E6;
+        .history > div{
             padding: 4px;
-            border-bottom: 1px solid #CCC;
+        }
+        .clear {
+            float: right;
+            border: 1px solid;
+            padding: 0 4px;
+            color: #ED6464;
+            background-color: #FFF0F0;
+            font-size: 90%;
+            margin-right: 14px;
         }
     </style>
 </head>
 
 <body>
-    <div class="panel left">
+    <script src="/jquery.min.js"></script>
+    <div style="margin: 8px;"><a href="../">&lt; 返回</a></div>
+    <div class="panel">
         <div class="title">HTTP服务测试工具</div>
-        <div class="">
-            <div class="">URL:
+        <form>
+            <div>
+                <label>URL:</label>
                 <input type="text" name="url" placeholder="http://www.example.com/get">
             </div>
-            <div class="">请求方式:
+            <div>
+                <label>Method:</label>
                 <select name="method">
-                    <option value="GET" selected="selected">GET</option>
+                    <option value="GET" selected>GET</option>
                     <option value="POST">POST</option>
                     <option value="PUT">PUT</option>
                     <option value="DELETE">DELETE</option>
                 </select>
             </div>
-            <div class=""><a class="send-request">发送请求</a></div>
+            <div>
+                <label>Content-Type:</label>
+                <select name="contentType">
+                    <option value="application/x-www-form-urlencoded" selected>application/x-www-form-urlencoded</option>
+                    <option value="multipart/form-data">multipart/form-data</option>
+                    <option value="application/json">application/json</option>
+                    <option value="application/xml">application/xml</option>
+                </select>
+            </div>
+            <div>
+                <label>Headers:</label>
+                <textarea name="headers" rows="8" cols="40" style="height:120px;">
+格式举例(JSON格式)：
+
+{
+    "Authentication": "xxx",
+    "Token": "yyy"
+}
+</textarea>
+            </div>
+            <div>
+                <label>Query:</label>
+                <textarea name="query" rows="8" cols="40">
+当Content-Type: application/x-www-form-urlencoded 时格式：
+
+a=1&amp;b=2&amp;c=3
+
+
+当Content-Type: multipart/form-data 或
+  Content-Type: application/json 时格式(JSON格式)：
+
+{
+    "a": 1,
+    "b": 2,
+    "c": 3
+}
+
+
+当Content-Type: application/xml 时格式(XML格式)：
+
+&lt;xml&gt;
+    &lt;a&gt;1&lt;/a&gt;
+    &lt;b&gt;2&lt;/b&gt;
+    &lt;c&gt;3&lt;/c&gt;
+&lt;/xml&gt;
+</textarea>
+            </div>
+            <p>
+                <label></label>
+                <a class="send">发送请求</a>
+                <a class="clear-form">清空</a>
+            </p>
+        </form>
+    </div>
+    <div class="history-ctn">
+        <div class="title">历史记录 <a class="clear">清空</a></div>
+        <div class="history">
         </div>
     </div>
-    <div class="panel right">
-        <div class="title">历史记录</div>
-        <div class="">
-        </div>
-    </div>
+    <script type="text/javascript">
+        (function() {
+            function getTime() {
+                var d = new Date(),
+                    z = '',
+                    t = d.getHours();
+
+                z += (t < 10 ? '0' : '') + t;
+                t = d.getMinutes();
+                z += (t < 10 ? ':0' : ':') + t;
+                t = d.getSeconds();
+                z += (t < 10 ? ':0' : ':') + t;
+
+                return z + '.' + d.getMilliseconds();
+            }
+
+            var $history = $('.history');
+
+            $('.send').on('click', function() {
+                var $log = $('<div><span class="time">' + getTime() + '</span><span class="status">Requesting...</span><div class="result"></div></div>');
+                $log.prependTo($history);
+                $.post('/http_request/request', $('form').serialize(), function(data) {
+                    $log.find('.status').text(data.Error);
+
+                    // 如果是 JSON 数据，则人性化显示
+                    try {
+                        data.Content = JSON.parse(data.Content);
+                        data.Content = JSON.stringify(data.Content, null, '    ');
+                        var $code = $('<pre><code></code></pre>');
+                        $code.find('code').text(data.Content);
+                        $log.find('.result').append($code);
+                    } catch (e) {
+                        $log.find('.result').text(data.Content);
+                    }
+                });
+            });
+
+            $('.clear-form').on('click', function () {
+                $('input[name="url"]').val('');
+                $('textarea[name="headers"]').val('');
+                $('textarea[name="query"]').val('');
+            });
+
+            $('.clear').on('click', function () {
+                $history.empty();
+            });
+        })();
+    </script>
 </body>
 
 </html>
