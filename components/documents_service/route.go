@@ -113,7 +113,7 @@ func responseFile(c *gin.Context, project, file, filePath string) {
 	var err, content string
 
 	switch strings.ToLower(path.Ext(file)) {
-	case ".md", ".markdown":
+	case ".md", ".mdown", ".markdown":
 		data, _ := ioutil.ReadFile(filePath)
 		content = string(blackfriday.MarkdownCommon(data))
 		goto JSON
