@@ -1,19 +1,43 @@
-package dashboard
+package main
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/lxn/walk"
 	ui "github.com/lxn/walk/declarative"
 	"github.com/simpleelegant/devtools/plugins/network"
 	"github.com/skratchdot/open-golang/open"
 )
 
+func run(e *gin.Engine, address string) error {
+	// start HTTP service
+	go func() {
+		if err := e.Run(address); err != nil {
+			panic(err)
+		}
+	}()
+
+	// run GUI
+	addressAnatomy := strings.Split(address, ":")
+	if len(addressAnatomy) != 2 {
+		return errors.New("no port in address")
+	}
+	autoOpenURL := fmt.Sprintf("http://127.0.0.1:%v", addressAnatomy[1])
+	if err := runGUI(autoOpenURL); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Run 启用GUI控制面板，只能用于 Windows
-func Run(url string) {
+func runGUI(url string) error {
 	var ip *walk.TextEdit
 
-	ui.MainWindow{
+	mainWindow := ui.MainWindow{
 		Title:   "DevTools 服务端",
 		MinSize: ui.Size{Width: 600, Height: 400},
 		Layout:  ui.VBox{},
@@ -73,5 +97,9 @@ func Run(url string) {
 				Text: "Author: Wang Yujian <simpleelegant@163.com>",
 			},
 		},
-	}.Run()
+	}
+
+	_, err := mainWindow.Run()
+
+	return err
 }

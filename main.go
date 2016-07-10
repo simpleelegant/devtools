@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/simpleelegant/devtools/components/index"
-	"github.com/simpleelegant/devtools/dashboard"
 	"github.com/simpleelegant/devtools/plugins/conf"
 	"github.com/simpleelegant/devtools/plugins/network"
 
@@ -34,7 +33,9 @@ func main() {
 
 	// bootstrap
 	{
-		if ips, err := network.GetLocalIP(); err == nil {
+		welcome()
+
+		if ips, err := network.GetLocalIPs(); err == nil {
 			fmt.Printf("\nServer IP: %s\n\n", strings.Join(ips, " , "))
 		}
 
@@ -45,13 +46,14 @@ func main() {
 		}
 	}
 
-	go func() {
-		// Start the server
-		if err := r.Run(addr); err != nil {
-			panic(err)
-		}
-	}()
+	// Start the server
+	if err := run(r, addr); err != nil {
+		panic(err)
+	}
+}
 
-	// run dashboard
-	dashboard.Run(fmt.Sprintf("http://127.0.0.1:%v", conf.Options.Port))
+func welcome() {
+	fmt.Println("┌─────────────────────────────────────┐")
+	fmt.Println("│              DevTools               │")
+	fmt.Println("└─────────────────────────────────────┘")
 }
