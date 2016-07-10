@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"yujian/devtools/plugins/conf"
+	"github.com/simpleelegant/devtools/plugins/conf"
 
 	"github.com/gin-gonic/gin"
 	"github.com/russross/blackfriday"

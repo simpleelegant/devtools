@@ -3,7 +3,8 @@ package httplog
 import (
 	"encoding/json"
 	"net/http"
-	"yujian/devtools/plugins/websocket"
+
+	"github.com/simpleelegant/devtools/plugins/websocket"
 
 	"github.com/gin-gonic/gin"
 )

@@ -5,8 +5,8 @@ import (
 
 	"github.com/lxn/walk"
 	ui "github.com/lxn/walk/declarative"
+	"github.com/simpleelegant/devtools/plugins/network"
 	"github.com/skratchdot/open-golang/open"
-	"yujian/utils.go/network"
 )
 
 // Run 启用GUI控制面板，只能用于 Windows
@@ -36,7 +36,7 @@ func Run(url string) {
 							ui.PushButton{
 								Text: "刷新",
 								OnClicked: func() {
-									ips, err := network.GetLocalIP()
+									ips, err := network.GetLocalIPs()
 									if err != nil {
 										ip.SetText("error on refresh!")
 									}

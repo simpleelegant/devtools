@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"strings"
-	"yujian/devtools/components/index"
-	"yujian/devtools/plugins/conf"
-	"yujian/devtools/plugins/network"
 
-	a "yujian/devtools/components/documents_service"
-	b "yujian/devtools/components/http_log"
-	c "yujian/devtools/components/http_request"
+	"github.com/simpleelegant/devtools/components/index"
+	"github.com/simpleelegant/devtools/plugins/conf"
+	"github.com/simpleelegant/devtools/plugins/network"
+
+	a "github.com/simpleelegant/devtools/components/documents_service"
+	b "github.com/simpleelegant/devtools/components/http_log"
+	c "github.com/simpleelegant/devtools/components/http_request"
 
 	"github.com/gin-gonic/gin"
 	"github.com/skratchdot/open-golang/open"
@@ -34,7 +35,7 @@ func main() {
 	{
 		welcome()
 
-		if ips, err := network.GetLocalIP(); err == nil {
+		if ips, err := network.GetLocalIPs(); err == nil {
 			fmt.Printf("\nServer IP: %s\n\n", strings.Join(ips, " , "))
 		}
 

@@ -3,7 +3,7 @@ package network
 import "net"
 
 // GetLocalIP get local IPs
-func GetLocalIP() (ips []string, e error) {
+func GetLocalIPs() (ips []string, e error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return nil, err
