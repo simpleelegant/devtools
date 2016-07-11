@@ -17,14 +17,16 @@
             min-width: 1530px;
             position: relative;
         }
-
+        pre {
+            margin: 0;
+        }
         a {
             text-decoration: none;
             cursor: pointer;
         }
 
         select,textarea,code {
-            font-family: 'Fira Mono', consolas, 'Microsoft Yahei', monospace;
+            font-family: consolas, 'Fira Mono', 'Microsoft Yahei', monospace;
         }
         label {
             display: inline-block;
@@ -107,15 +109,6 @@
             color: #7B7B7B;
             margin-left: 450px;
         }
-
-        .time {
-            display: inline-block;
-            width: 120px;
-            color: #F00;
-        }
-        .history > div{
-            padding: 4px;
-        }
         .clear {
             float: right;
             border: 1px solid;
@@ -136,7 +129,7 @@
         <form>
             <div>
                 <label>URL:</label>
-                <input type="text" name="url" placeholder="http://www.example.com/get">
+                <input type="text" name="url" placeholder="示例：http://www.example.com/get">
             </div>
             <div>
                 <label>Method:</label>
@@ -157,42 +150,12 @@
                 </select>
             </div>
             <div>
-                <label>Headers:</label>
-                <textarea name="headers" rows="8" cols="40" style="height:120px;">
-格式举例(JSON格式)：
-
-{
-    "Authentication": "xxx",
-    "Token": "yyy"
-}
-</textarea>
+                <label>Header:</label>
+                <textarea name="header" rows="8" cols="40" placeholder="鼠标移到这里查看示例" style="height:120px;"></textarea>
             </div>
             <div>
                 <label>Query:</label>
-                <textarea name="query" rows="8" cols="40">
-当Content-Type: application/x-www-form-urlencoded 时格式：
-
-a=1&amp;b=2&amp;c=3
-
-
-当Content-Type: multipart/form-data 或
-  Content-Type: application/json 时格式(JSON格式)：
-
-{
-    "a": 1,
-    "b": 2,
-    "c": 3
-}
-
-
-当Content-Type: application/xml 时格式(XML格式)：
-
-&lt;xml&gt;
-    &lt;a&gt;1&lt;/a&gt;
-    &lt;b&gt;2&lt;/b&gt;
-    &lt;c&gt;3&lt;/c&gt;
-&lt;/xml&gt;
-</textarea>
+                <textarea name="query" rows="8" cols="40" placeholder="鼠标移到这里查看示例"></textarea>
             </div>
             <p>
                 <label></label>
@@ -204,54 +167,79 @@ a=1&amp;b=2&amp;c=3
     <div class="history-ctn">
         <div class="title">历史记录 <a class="clear">清空</a></div>
         <div class="history">
+            <div style="display:none;">
+                <div style="background-color: rgb(244, 244, 180);white-space: nowrap;overflow: hidden;">#<span class="order"></span>
+                    <span class="method" style="font-weight: bold;"></span>
+                    <span class="url"></span>
+                </div>
+                <div style="background-color: beige;"><pre><code class="header"></code></pre></div>
+                <div style="margin-bottom:6px;"><pre><code class="body">Waiting...</code></pre></div>
+            </div>
         </div>
     </div>
     <script type="text/javascript">
         (function() {
-            function getTime() {
-                var d = new Date(),
-                    z = '',
-                    t = d.getHours();
+            $('textarea[name="header"]').attr('title', 'Header 示例（key 和 value 之间是英文冒号）：\n\nkey1: value1\nkey2: value2');
 
-                z += (t < 10 ? '0' : '') + t;
-                t = d.getMinutes();
-                z += (t < 10 ? ':0' : ':') + t;
-                t = d.getSeconds();
-                z += (t < 10 ? ':0' : ':') + t;
+            $('textarea[name="query"]').attr('title', 'Query 示例：\n如果上面的 Content-Type 你选择 application/x-www-form-urlencoded\n或 multipart/form-data, 请参照以下格式输入 Query 参数：\n\nfield1 = value1\nfield2 = value2\n\n\n如果上面的 Content-Type 你选择 application/json 或 application/xml, 请根据你要请求的 URL 的相关文档提供参数。');
 
-                return z + '.' + d.getMilliseconds();
-            }
+            var order = 0,
+                $form = $('form'),
+                $url = $('input[name="url"]'),
+                $method = $('select[name="method"]'),
+                $contentType = $('select[name="contentType"]'),
+                $header = $('textarea[name="header"]'),
+                $query = $('textarea[name="query"]'),
+                $history = $('.history'),
+                $historyItem = $('.history > div').detach();
 
-            var $history = $('.history');
+            $form.submit(function() {
+                $log = $historyItem.clone();
+                order += 1;
+                $log.find('.order').text(order);
+                $log.find('.method').text($method.val());
+                $log.find('.url').text($url.val());
+                $log.prependTo($history);
+                $log.show();
+
+                $.post('/http_request/request', $('form').serialize(), function(data) {
+                    if (data.Error) {
+                        $log.find('.body').text('ERROR: '+data.Error);
+                        return;
+                    }
+
+                    var $header = $log.find('.header');
+                    $header.append('<div>Status: '+data.Data.Status+'</div>');
+                    for (var k in data.Data.Header) {
+                        data.Data.Header[k].forEach(function(v) {
+                            $header.append('<div>'+k+': '+v+'</div>');
+                        });
+                    }
+
+                    $log.find('.body').text(data.Data.Body);
+                });
+
+                return false;
+            });
 
             $('.send').on('click', function() {
-                var $log = $('<div><span class="time">' + getTime() + '</span><span class="status">Requesting...</span><div class="result"></div></div>');
-                $log.prependTo($history);
-                $.post('/http_request/request', $('form').serialize(), function(data) {
-                    $log.find('.status').text(data.Error);
-
-                    // 如果是 JSON 数据，则人性化显示
-                    try {
-                        data.Content = JSON.parse(data.Content);
-                        data.Content = JSON.stringify(data.Content, null, '    ');
-                        var $code = $('<pre><code></code></pre>');
-                        $code.find('code').text(data.Content);
-                        $log.find('.result').append($code);
-                    } catch (e) {
-                        $log.find('.result').text(data.Content);
-                    }
-                });
+                $form.submit();
             });
 
             $('.clear-form').on('click', function () {
-                $('input[name="url"]').val('');
-                $('textarea[name="headers"]').val('');
-                $('textarea[name="query"]').val('');
+                $url.val('');
+                $method.val('GET');
+                $contentType.val('application/x-www-form-urlencoded');
+                $header.val('');
+                $query.val('');
             });
 
             $('.clear').on('click', function () {
                 $history.empty();
+                order = 0;
             });
+
+            $('input[name="url"]').focus();
         })();
     </script>
 </body>
