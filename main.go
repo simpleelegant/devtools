@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/simpleelegant/devtools/components/index"
 	"github.com/simpleelegant/devtools/plugins/conf"
 	"github.com/simpleelegant/devtools/plugins/network"
 
-	a "github.com/simpleelegant/devtools/components/documents_service"
-	b "github.com/simpleelegant/devtools/components/http_log"
-	c "github.com/simpleelegant/devtools/components/http_request"
+	c5 "github.com/simpleelegant/devtools/components/data_convert"
+	c2 "github.com/simpleelegant/devtools/components/documents_service"
+	c3 "github.com/simpleelegant/devtools/components/http_log"
+	c4 "github.com/simpleelegant/devtools/components/http_request"
+	c1 "github.com/simpleelegant/devtools/components/index"
 
 	"github.com/gin-gonic/gin"
 	"github.com/skratchdot/open-golang/open"
@@ -18,15 +19,18 @@ import (
 
 func main() {
 	chdir()
+
 	conf.Load("./config.json")
+
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
 	{
-		index.Route(r)
-		a.Route(r)
-		b.Route(r)
-		c.Route(r)
+		c1.Route(r)
+		c2.Route(r)
+		c3.Route(r)
+		c4.Route(r)
+		c5.Route(r)
 	}
 
 	addr := fmt.Sprintf("0.0.0.0:%v", conf.Options.Port)
