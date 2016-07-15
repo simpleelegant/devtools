@@ -2,9 +2,11 @@ package httprequest
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,17 +18,19 @@ func Route(r *gin.Engine) {
 	})
 
 	r.POST("/data_convert/convert", func(c *gin.Context) {
-		function := c.PostForm("function")
+		ability := c.PostForm("ability")
 		input := c.PostForm("input")
 
 		var output string
 		var err error
 
-		switch function {
+		switch ability {
 		case "jsonBeautify":
 			output, err = jsonBeautify(input)
+		case "base64Encode":
+			output, err = base64Encode(input)
 		default:
-			err = errors.New("function not supported")
+			err = errors.New("Not supported")
 		}
 
 		if err != nil {
@@ -49,4 +53,11 @@ func jsonBeautify(input string) (string, error) {
 	err := json.Indent(&out, []byte(input), "", "    ")
 
 	return out.String(), err
+}
+
+func base64Encode(input string) (string, error) {
+	input = strings.TrimSpace(input)
+	encoded := base64.StdEncoding.EncodeToString([]byte(input))
+
+	return encoded, nil
 }

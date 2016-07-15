@@ -89,10 +89,11 @@
     <div class="page-title">数据格式转换</div>
 
     <div class="input-ctn">
-        <a class="btn" onclick="functions.jsonBeautify();">JSON Beautify</a>
+        <a class="btn" onclick="convert('jsonBeautify');">JSON Beautify</a>
+        <a class="btn" onclick="convert('base64Encode');" title="base64 encode, with all leading and trailing white space removed, as defined by Unicode.">Base64 Encode</a>
         <div class="label" style="margin-top: 8px;">输入区域： <a class="clear">清空</a></div>
         <form class="input">
-            <input type="hidden" name="function" value="">
+            <input type="hidden" name="ability" value="">
             <textarea name="input" rows="8" cols="40" placeholder="请在这里输入..."></textarea>
         </form>
     </div>
@@ -101,7 +102,7 @@
 
     <div class="output-ctn">
         <div class="label">处理结果：</div>
-        <textarea name="output" rows="8" cols="40"></textarea>
+        <textarea name="output" rows="8" cols="40" readonly></textarea>
     </div>
 
     <script type="text/javascript">
@@ -109,7 +110,7 @@
             var $input = $('textarea[name="input"]'),
                 $output = $('textarea[name="output"]'),
                 $form = $('form.input'),
-                $function = $('input[name="function"]');
+                $ability = $('input[name="ability"]');
 
             $input.focus();
 
@@ -138,11 +139,9 @@
                 return false;
             });
 
-            window.functions = {
-                jsonBeautify: function() {
-                    $function.val('jsonBeautify');
-                    $form.submit();
-                }
+            window.convert = function(ability) {
+                $ability.val(ability);
+                $form.submit();
             };
         })();
     </script>
