@@ -11,6 +11,7 @@ import (
 	c2 "github.com/simpleelegant/devtools/components/documents_service"
 	c3 "github.com/simpleelegant/devtools/components/http_log"
 	c4 "github.com/simpleelegant/devtools/components/http_request"
+	c6 "github.com/simpleelegant/devtools/components/image_convert"
 	c1 "github.com/simpleelegant/devtools/components/index"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,7 @@ func main() {
 		c3.Route(r)
 		c4.Route(r)
 		c5.Route(r)
+		c6.Route(r)
 	}
 
 	addr := fmt.Sprintf("0.0.0.0:%v", conf.Options.Port)
