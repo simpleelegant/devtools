@@ -29,6 +29,8 @@ func Route(r *gin.Engine) {
 			output, err = jsonBeautify(input)
 		case "base64Encode":
 			output, err = base64Encode(input)
+		case "base64Decode":
+			output, err = base64Decode(input)
 		default:
 			err = errors.New("Not supported")
 		}
@@ -60,4 +62,11 @@ func base64Encode(input string) (string, error) {
 	encoded := base64.StdEncoding.EncodeToString([]byte(input))
 
 	return encoded, nil
+}
+
+func base64Decode(input string) (string, error) {
+	input = strings.TrimSpace(input)
+	decoded, err := base64.StdEncoding.DecodeString(input)
+
+	return string(decoded), err
 }
