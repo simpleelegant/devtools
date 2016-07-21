@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	tree "github.com/simpleelegant/devtools/components/data_convert/json.syntax.tree"
 )
 
 // Route register routes
@@ -19,7 +20,7 @@ func Route(r *gin.Engine) {
 
 	r.POST("/data_convert/convert", func(c *gin.Context) {
 		ability := c.PostForm("ability")
-		input := c.PostForm("input")
+		input := strings.TrimSpace(c.PostForm("input"))
 
 		var output string
 		var err error
@@ -31,6 +32,8 @@ func Route(r *gin.Engine) {
 			output, err = base64Encode(input)
 		case "base64Decode":
 			output, err = base64Decode(input)
+		case "jsonToGoStruct":
+			output, err = jsonToGoStruct(input)
 		default:
 			err = errors.New("Not supported")
 		}
@@ -58,15 +61,22 @@ func jsonBeautify(input string) (string, error) {
 }
 
 func base64Encode(input string) (string, error) {
-	input = strings.TrimSpace(input)
 	encoded := base64.StdEncoding.EncodeToString([]byte(input))
 
 	return encoded, nil
 }
 
 func base64Decode(input string) (string, error) {
-	input = strings.TrimSpace(input)
 	decoded, err := base64.StdEncoding.DecodeString(input)
 
 	return string(decoded), err
+}
+
+func jsonToGoStruct(input string) (string, error) {
+	t := tree.SyntaxTree{}
+	if _, err := t.Write([]byte(input)); err != nil {
+		return "", err
+	}
+
+	return string(t.EncodeToStruct()), nil
 }
