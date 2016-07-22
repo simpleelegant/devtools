@@ -1,22 +1,19 @@
-package tree
+package analyser
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
-	"strconv"
 	"strings"
 )
 
-var (
-	ErrRootNodeMustBeObjectOrArray = errors.New("Root node must be object or array")
-	ErrJSONInvalid                 = errors.New("JSON invalid")
-)
+// ErrRootNodeShouldBeObjectOrArray ...
+var ErrRootNodeShouldBeObjectOrArray = errors.New("Root node should be object or array")
 
 // Node represent node on syntax tree
 type Node interface {
-	Append(i interface{}) error
+	Append(i interface{})
 	SetParent(p Node)
 	GetParent() Node
 }
@@ -39,33 +36,22 @@ func (n *ObjectNode) GetParent() Node {
 }
 
 // Append append sub node or other things
-func (n *ObjectNode) Append(i interface{}) error {
+func (n *ObjectNode) Append(i interface{}) {
 	if n.NextKey == "" {
-		v, ok := i.(string)
-		if !ok {
-			return ErrJSONInvalid
-		}
-
-		// FIXME need full check
-		if strings.ContainsAny(v, "\"") {
-			return ErrJSONInvalid
-		}
-
-		n.NextKey = v
-		return nil
+		n.NextKey = i.(*Lexeme).Value
+		return
 	}
 
 	if n.Properties == nil {
 		n.Properties = map[string]interface{}{}
 	}
+
 	n.Properties[n.NextKey] = i
 	n.NextKey = ""
 
 	if o, ok := i.(Node); ok {
 		o.SetParent(n)
 	}
-
-	return nil
 }
 
 // ArrayNode represent node of JSON array
@@ -85,14 +71,12 @@ func (n *ArrayNode) GetParent() Node {
 }
 
 // Append append sub node or other things
-func (n *ArrayNode) Append(i interface{}) error {
+func (n *ArrayNode) Append(i interface{}) {
 	n.Items = append(n.Items, i)
 
 	if o, ok := i.(Node); ok {
 		o.SetParent(n)
 	}
-
-	return nil
 }
 
 // SyntaxTree syntax tree
@@ -103,62 +87,49 @@ type SyntaxTree struct {
 }
 
 // Write ...
-func (t *SyntaxTree) Write(p []byte) (n int, err error) {
-	for _, b := range p {
-		n += 1
+func (t *SyntaxTree) Write(l *LexemeList) error {
+	lexeme, err := l.Read()
+	// if EOF
+	if err != nil {
+		return nil
+	}
 
-		if isSpace(b) {
-			continue
+	// init root node
+	switch lexeme.Type {
+	case ObjectOpen:
+		t.Root = &ObjectNode{}
+		t.Current = t.Root
+	case ArrayOpen:
+		t.Root = &ArrayNode{}
+		t.Current = t.Root
+	default:
+		return ErrRootNodeShouldBeObjectOrArray
+	}
+
+	for true {
+		lexeme, err := l.Read()
+		if err != nil {
+			return nil
 		}
 
-		if strings.HasPrefix(t.Remain, "\"") && !strings.HasSuffix(t.Remain, "\"") {
-			t.appendRemain(b)
-
-			continue
-		}
-
-		switch b {
-		case '{':
+		switch lexeme.Type {
+		case ObjectOpen:
 			n := &ObjectNode{}
-			if t.Root == nil {
-				t.Root = n
-			} else {
-				t.Current.Append(n)
-			}
+			t.Current.Append(n)
 			t.Current = n
-		case '[':
+		case ArrayOpen:
 			n := &ArrayNode{}
-			if t.Root == nil {
-				t.Root = n
-			} else {
-				t.Current.Append(n)
-			}
+			t.Current.Append(n)
 			t.Current = n
-		case '}', ']':
-			if t.Current == nil {
-				return n, ErrRootNodeMustBeObjectOrArray
-			}
-			if err := t.consumeRemain(); err != nil {
-				return n, err
-			}
-
+		case ObjectClose, ArrayClose:
 			t.Current = t.Current.GetParent()
-		case ':', ',':
-			if t.Current == nil {
-				return n, ErrRootNodeMustBeObjectOrArray
-			}
-			if err := t.consumeRemain(); err != nil {
-				return n, err
-			}
+		case String, Number, Bool, Null:
+			t.Current.Append(lexeme)
 		default:
-			if t.Current == nil {
-				return n, ErrRootNodeMustBeObjectOrArray
-			}
-			t.appendRemain(b)
 		}
 	}
 
-	return
+	return nil
 }
 
 // EncodeToStruct encode to Go struct
@@ -178,45 +149,6 @@ func (t *SyntaxTree) String() string {
 	}
 
 	return string(b)
-}
-
-func (t *SyntaxTree) parseRemain() interface{} {
-	switch t.Remain {
-	case "null":
-		return nil
-	case "true":
-		return true
-	case "false":
-		return false
-	default:
-		// string
-		if strings.HasPrefix(t.Remain, "\"") {
-			return strings.Trim(t.Remain, "\"")
-		}
-		if f, err := strconv.ParseFloat(t.Remain, 64); err == nil {
-			return f
-		}
-
-		return t.Remain
-	}
-}
-
-func (t *SyntaxTree) appendRemain(c byte) {
-	t.Remain += string(c)
-}
-
-func (t *SyntaxTree) consumeRemain() error {
-	if t.Remain == "" {
-		return nil
-	}
-
-	if err := t.Current.Append(t.parseRemain()); err != nil {
-		return err
-	}
-
-	t.Remain = ""
-
-	return nil
 }
 
 func travel(n interface{}, depth int, w io.Writer) {
@@ -241,20 +173,20 @@ func travel(n interface{}, depth int, w io.Writer) {
 		}
 
 		w.Write([]byte(multipleString("    ", depth) + "}"))
-	case nil:
-		w.Write([]byte("interface{}"))
-	case bool:
-		w.Write([]byte("bool   "))
-	case string:
-		w.Write([]byte("string "))
-	case float64:
-		w.Write([]byte("float64"))
+	case *Lexeme:
+		switch i.Type {
+		case String:
+			w.Write([]byte("string "))
+		case Number:
+			w.Write([]byte("float64"))
+		case Bool:
+			w.Write([]byte("bool   "))
+		case Null:
+			w.Write([]byte("interface{}"))
+		default:
+		}
 	default:
 	}
-}
-
-func isSpace(c byte) bool {
-	return c == ' ' || c == '\t' || c == '\r' || c == '\n'
 }
 
 func toCamelCase(s string) string {

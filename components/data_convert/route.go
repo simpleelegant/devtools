@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	tree "github.com/simpleelegant/devtools/components/data_convert/json.syntax.tree"
+	"github.com/simpleelegant/devtools/components/data_convert/json.syntax.analyser"
 )
 
 // Route register routes
@@ -73,8 +73,13 @@ func base64Decode(input string) (string, error) {
 }
 
 func jsonToGoStruct(input string) (string, error) {
-	t := tree.SyntaxTree{}
-	if _, err := t.Write([]byte(input)); err != nil {
+	a := &analyser.LexemeList{}
+	if _, err := a.Write([]byte(input)); err != nil {
+		return "", err
+	}
+
+	t := analyser.SyntaxTree{}
+	if err := t.Write(a); err != nil {
 		return "", err
 	}
 
