@@ -2,9 +2,11 @@ package dataconvert
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -32,6 +34,8 @@ func Route(r *gin.Engine) {
 			output, err = base64Encode(input)
 		case "base64Decode":
 			output, err = base64Decode(input)
+		case "md5Checksum":
+			output, err = md5Checksum(input)
 		case "jsonToGoStruct":
 			output, err = jsonToGoStruct(input)
 		default:
@@ -70,6 +74,10 @@ func base64Decode(input string) (string, error) {
 	decoded, err := base64.StdEncoding.DecodeString(input)
 
 	return string(decoded), err
+}
+
+func md5Checksum(input string) (string, error) {
+	return fmt.Sprintf("%x", md5.Sum([]byte(input))), nil
 }
 
 func jsonToGoStruct(input string) (string, error) {
