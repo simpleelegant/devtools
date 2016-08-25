@@ -66,7 +66,7 @@ func (l *LexemeList) parseRemain() {
 func (l *LexemeList) Write(p []byte) (n int, err error) {
 	// check json string is valid
 	var scrap bytes.Buffer
-	if err := json.Indent(&scrap, p, "", ""); err != nil {
+	if err := json.Compact(&scrap, p); err != nil {
 		return 0, err
 	}
 

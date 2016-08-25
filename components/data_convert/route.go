@@ -28,8 +28,10 @@ func Route(r *gin.Engine) {
 		var err error
 
 		switch ability {
-		case "jsonBeautify":
-			output, err = jsonBeautify(input)
+		case "jsonIndent":
+			output, err = jsonIndent(input)
+		case "jsonCompact":
+			output, err = jsonCompact(input)
 		case "base64Encode":
 			output, err = base64Encode(input)
 		case "base64Decode":
@@ -57,9 +59,16 @@ func Route(r *gin.Engine) {
 	})
 }
 
-func jsonBeautify(input string) (string, error) {
+func jsonIndent(input string) (string, error) {
 	var out bytes.Buffer
 	err := json.Indent(&out, []byte(input), "", "    ")
+
+	return out.String(), err
+}
+
+func jsonCompact(input string) (string, error) {
+	var out bytes.Buffer
+	err := json.Compact(&out, []byte(input))
 
 	return out.String(), err
 }
