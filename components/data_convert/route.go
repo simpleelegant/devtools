@@ -40,6 +40,8 @@ func Route(r *gin.Engine) {
 			output, err = md5Checksum(input)
 		case "jsonToGoStruct":
 			output, err = jsonToGoStruct(input)
+		case "keyValueToJSON":
+			output, err = keyValueToJSON(input)
 		default:
 			err = errors.New("Not supported")
 		}
@@ -101,4 +103,35 @@ func jsonToGoStruct(input string) (string, error) {
 	}
 
 	return string(t.EncodeToStruct()), nil
+}
+
+func keyValueToJSON(input string) (string, error) {
+	e := errors.New("Bad input")
+	ctn := make(map[string]string, 10)
+
+	for _, line := range strings.Split(input, "\n") {
+		// skip empty line
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		kv := strings.SplitN(line, "=", 2)
+		if len(kv) != 2 {
+			return "", e
+		}
+
+		kv[0] = strings.TrimSpace(kv[0])
+		if kv[0] == "" {
+			return "", e
+		}
+
+		ctn[kv[0]] = strings.TrimSpace(kv[1])
+	}
+
+	b, err := json.Marshal(ctn)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }
