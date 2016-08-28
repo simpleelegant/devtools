@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/simpleelegant/devtools/components/data_convert/json.syntax.analyser"
 )
 
 // Route register routes
@@ -89,20 +88,6 @@ func base64Decode(input string) (string, error) {
 
 func md5Checksum(input string) (string, error) {
 	return fmt.Sprintf("%x", md5.Sum([]byte(input))), nil
-}
-
-func jsonToGoStruct(input string) (string, error) {
-	a := &analyser.LexemeList{}
-	if _, err := a.Write([]byte(input)); err != nil {
-		return "", err
-	}
-
-	t := analyser.SyntaxTree{}
-	if err := t.Write(a); err != nil {
-		return "", err
-	}
-
-	return string(t.EncodeToStruct()), nil
 }
 
 func keyValueToJSON(input string) (string, error) {

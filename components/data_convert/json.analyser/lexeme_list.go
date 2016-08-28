@@ -78,7 +78,9 @@ func (l *LexemeList) Write(p []byte) (n int, err error) {
 	for _, b := range p {
 		n++
 
-		if bytes.HasPrefix(l.remain, doubleQuote) && !bytes.HasSuffix(l.remain, doubleQuote) {
+		// the byte may be part of a string
+		if bytes.HasPrefix(l.remain, doubleQuote) &&
+			(len(l.remain) == 1 || !bytes.HasSuffix(l.remain, doubleQuote)) {
 			l.remain = append(l.remain, b)
 			continue
 		}

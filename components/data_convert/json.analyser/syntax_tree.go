@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
-	"strings"
 )
 
 // ErrRootNodeShouldBeObjectOrArray ...
@@ -133,12 +131,12 @@ func (t *SyntaxTree) Write(l *LexemeList) error {
 }
 
 // EncodeToStruct encode to Go struct
-func (t *SyntaxTree) EncodeToStruct() []byte {
-	w := &bytes.Buffer{}
+func (t *SyntaxTree) Convert(travel func(node interface{}, depth int, output *bytes.Buffer)) []byte {
+	b := &bytes.Buffer{}
 
-	travel(t.Root, 0, w)
+	travel(t.Root, 0, b)
 
-	return w.Bytes()
+	return b.Bytes()
 }
 
 // String ...
@@ -149,63 +147,4 @@ func (t *SyntaxTree) String() string {
 	}
 
 	return string(b)
-}
-
-func travel(n interface{}, depth int, w io.Writer) {
-	switch i := n.(type) {
-	case *ArrayNode:
-		if len(i.Items) == 0 {
-			w.Write([]byte("[]interface{}"))
-		} else {
-			w.Write([]byte("[]"))
-			travel(i.Items[0], depth, w)
-		}
-	case *ObjectNode:
-		w.Write([]byte("struct {\n"))
-
-		spin := multipleString("    ", depth+1)
-		for k, v := range i.Properties {
-			// TODO check k valid
-
-			w.Write([]byte(spin + insureLen(toCamelCase(k), 12) + " "))
-			travel(v, depth+1, w)
-			w.Write([]byte(" `json:\"" + k + "\"`\n"))
-		}
-
-		w.Write([]byte(multipleString("    ", depth) + "}"))
-	case *Lexeme:
-		switch i.Type {
-		case String:
-			w.Write([]byte("string "))
-		case Number:
-			w.Write([]byte("float64"))
-		case Bool:
-			w.Write([]byte("bool   "))
-		case Null:
-			w.Write([]byte("interface{}"))
-		default:
-		}
-	default:
-	}
-}
-
-func toCamelCase(s string) string {
-	return strings.Replace(strings.Title(strings.Replace(s, "_", " ", -1)), " ", "", -1)
-}
-
-func multipleString(s string, multiple int) string {
-	if multiple <= 0 {
-		return ""
-	}
-
-	b := ""
-	for i := 0; i < multiple; i++ {
-		b += s
-	}
-
-	return b
-}
-
-func insureLen(s string, min int) string {
-	return s + multipleString(" ", min-len(s))
 }
