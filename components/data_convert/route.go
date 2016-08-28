@@ -23,8 +23,10 @@ func Route(r *gin.Engine) {
 		ability := c.PostForm("ability")
 		input := strings.TrimSpace(c.PostForm("input"))
 
-		var output string
-		var err error
+		var (
+			output string
+			err    error
+		)
 
 		switch ability {
 		case "jsonIndent":
@@ -43,6 +45,8 @@ func Route(r *gin.Engine) {
 			output, err = jsonToYAML(input)
 		case "keyValueToJSON":
 			output, err = keyValueToJSON(input)
+		case "markdownToHTML":
+			output, err = markdownToHTML(input)
 		default:
 			err = errors.New("Not supported")
 		}
