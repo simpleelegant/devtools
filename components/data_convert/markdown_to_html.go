@@ -10,7 +10,7 @@ const markdownToHTMLTemplate = `<html>
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Project Documents</title>
+    <title>Documents</title>
     <style media="screen">
         body {
             font-family: "Fira Sans", "Trebuchet MS", Arial, "Microsoft Yahei", sans-serif;

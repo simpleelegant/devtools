@@ -25,6 +25,7 @@
 
         textarea {
             font-family: 'Fira Mono', consolas, 'Microsoft Yahei', monospace;
+            font-size: 14px;
             box-sizing: border-box;
             width: 100%;
             height: 700px;
@@ -68,7 +69,7 @@
         .btn:hover {
             background-color: #8386FF;
         }
-        .clear {
+        .action {
             float: right;
             border: 1px solid;
             padding: 0 4px;
@@ -100,7 +101,7 @@
         <a class="btn" onclick="convert('jsonToYAML');" title="input JSON string, but output YAML">JSON to YAML</a>
         <a class="btn keyValueToJSON" onclick="convert('keyValueToJSON');">key=value to JSON</a>
         <a class="btn" onclick="convert('markdownToHTML');" title="input markdown text, but output HTML code with simple style.">markdown to HTML</a>
-        <div class="label" style="margin-top: 8px;">输入区域： <a class="clear">清空</a></div>
+        <div class="label" style="margin-top: 8px;"><a class="action clear">清空</a>输入区域：</div>
         <form class="input">
             <input type="hidden" name="ability" value="">
             <textarea name="input" rows="8" cols="40" placeholder="请在这里输入..."></textarea>
@@ -110,7 +111,7 @@
     <a class="btn copy-output-to-input" title="将“处理结果”复制到“输入区域”">&lt;&lt;</a>
 
     <div class="output-ctn">
-        <div class="label">处理结果：</div>
+        <div class="label"><a class="action copy">复制</a>处理结果：</div>
         <textarea name="output" rows="8" cols="40" readonly></textarea>
     </div>
 
@@ -127,6 +128,31 @@
                 $input.val('');
                 $output.val('');
                 $input.focus();
+            });
+
+            $('.copy').click(function() {
+                var $this = $(this),
+                    fails = 'Your browser does not support this operation.';
+
+                if (typeof document.queryCommandSupported !== 'function') {
+                    alert(fails);
+                    return;
+                }
+                
+                try {
+                    if (!document.queryCommandSupported('copy')) {
+                        alert(fails);
+                        return;
+                    }
+
+                    $output.select();
+                    document.execCommand('copy');
+
+                    $this.text('已复制');
+                    setTimeout(function(){ $this.text('复制'); }, 1000);
+                } catch (err) {
+                    alert(fails);
+                }
             });
 
             $('.copy-output-to-input').click(function() {
