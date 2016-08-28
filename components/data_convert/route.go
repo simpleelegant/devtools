@@ -39,6 +39,8 @@ func Route(r *gin.Engine) {
 			output, err = md5Checksum(input)
 		case "jsonToGoStruct":
 			output, err = jsonToGoStruct(input)
+		case "jsonToYAML":
+			output, err = jsonToYAML(input)
 		case "keyValueToJSON":
 			output, err = keyValueToJSON(input)
 		default:
