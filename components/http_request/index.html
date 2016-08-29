@@ -19,6 +19,7 @@
         }
         pre {
             margin: 0;
+            padding: 0 4px;
         }
         a {
             text-decoration: none;
@@ -34,14 +35,16 @@
         }
 
         input[type="text"] {
+            box-sizing: border-box;
             padding: 6px;
             font-size: inherit;
-            width: 600px;
+            width: 620px;
         }
 
         textarea {
+            box-sizing: border-box;
             vertical-align: text-top;
-            width: 600px;
+            width: 620px;
             height: 400px;
             padding: 6px;
         }
@@ -72,7 +75,7 @@
             border: 1px solid #CCC;
         }
 
-        .history-ctn .title {
+        .history-ctn > .title {
             background-color: #E6E6E6;
             padding: 4px;
             border-bottom: 1px solid #CCC;
@@ -84,6 +87,21 @@
             left: 0;
             right: 0;
             overflow-y: scroll;
+        }
+        .history .title {
+            padding: 0 4px;
+            background-color: rgb(244, 244, 180);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .history .reuse {
+            display: block;
+            position: absolute;
+            right: 0;
+            background-color: darkslategrey;
+            color: #FFF;
+            padding: 2px 4px;
+            font-size: 0.8em;
         }
 
         .send {
@@ -151,7 +169,7 @@
             </div>
             <div>
                 <label>Header:</label>
-                <textarea name="header" rows="8" cols="40" placeholder="鼠标移到这里查看示例" style="height:120px;"></textarea>
+                <textarea name="header" rows="8" cols="40" placeholder="鼠标移到这里查看示例" style="height:80px;"></textarea>
             </div>
             <div>
                 <label>Query:</label>
@@ -163,12 +181,17 @@
                 <a class="clear-form">清空</a>
             </p>
         </form>
+        <div style="width:740px;margin-bottom: 20px;">
+            <h4 style="margin-top: 60px;margin-bottom: 6px;">转化为 CURL:</h4>
+            <textarea style="background-color: lavender;padding: 8px;width:100%;height:8em;" class="curl" readonly></textarea>
+        </div>
     </div>
     <div class="history-ctn">
         <div class="title">历史记录 <a class="clear">清空</a></div>
         <div class="history">
             <div style="display:none;">
-                <div style="background-color: rgb(244, 244, 180);white-space: nowrap;overflow: hidden;">#<span class="order"></span>
+                <a class="reuse" title="fill form by this request">Re-Use</a>
+                <div class="title">#<span class="order"></span>
                     <span class="method" style="font-weight: bold;"></span>
                     <span class="url"></span>
                 </div>
@@ -179,23 +202,78 @@
     </div>
     <script type="text/javascript">
         (function() {
+            var requests = {
+                storage: [],
+                add: function(request) {
+                    if (this.storage.length >= 100) { // limit 100
+                        this.storage.shift();
+                    }
+
+                    this.storage.push(request);
+                },
+                get: function(order) {
+                    var found = null;
+                    this.storage.some(function(row) {
+                        if (row.order === order) {
+                            found = row;
+                            return true;
+                        }
+                    });
+                    return found;
+                },
+                lastOrder: function() {
+                    if (this.storage.length === 0) {
+                        return 0;
+                    }
+
+                    return this.storage[this.storage.length-1].order;
+                }
+            };
+
             $('textarea[name="header"]').attr('title', 'Header 示例（key 和 value 之间是英文冒号）：\n\nkey1: value1\nkey2: value2');
 
             $('textarea[name="query"]').attr('title', 'Query 示例：\n如果上面的 Content-Type 你选择 application/x-www-form-urlencoded\n或 multipart/form-data, 请参照以下格式输入 Query 参数：\n\nfield1 = value1\nfield2 = value2\n\n\n如果上面的 Content-Type 你选择 application/json 或 application/xml, 请根据你要请求的 URL 的相关文档提供参数。');
 
-            var order = 0,
-                $form = $('form'),
+            var $form = $('form'),
                 $url = $('input[name="url"]'),
                 $method = $('select[name="method"]'),
                 $contentType = $('select[name="contentType"]'),
                 $header = $('textarea[name="header"]'),
                 $query = $('textarea[name="query"]'),
                 $history = $('.history'),
-                $historyItem = $('.history > div').detach();
+                $historyItem = $('.history > div').detach(),
+                $curl = $('.curl');
+
+            function reuseClick(){
+                var req = requests.get($(this).data('order'));
+                if (req === null) {
+                    alert('this request unable to re-use.');
+                    return;
+                }
+
+                $url.val(req.url);
+                $method.val(req.method);
+                $contentType.val(req.contentType);
+                $header.val(req.header);
+                $query.val(req.query);
+            }
 
             $form.submit(function() {
+                var order = requests.lastOrder()+1;
+
+                // save form
+                requests.add({
+                    order: order,
+                    url: $url.val(),
+                    method: $method.val(),
+                    contentType: $contentType.val(),
+                    header: $header.val(),
+                    query: $query.val()
+                });
+
+                // update history panel
                 $log = $historyItem.clone();
-                order += 1;
+                $log.find('.reuse').data('order', order).click(reuseClick);
                 $log.find('.order').text(order);
                 $log.find('.method').text($method.val());
                 $log.find('.url').text($url.val());
@@ -205,18 +283,22 @@
                 $.post('/http_request/request', $('form').serialize(), function(data) {
                     if (data.Error) {
                         $log.find('.body').text('ERROR: '+data.Error);
+                        $curl.text('');
                         return;
                     }
 
-                    var $header = $log.find('.header');
-                    $header.append('<div>Status: '+data.Data.Status+'</div>');
+                    var $header = $log.find('.header'),
+                        h = 'Status: '+data.Data.Status;
                     for (var k in data.Data.Header) {
                         data.Data.Header[k].forEach(function(v) {
-                            $header.append('<div>'+k+': '+v+'</div>');
+                            h += '\n'+k+': '+v;
                         });
                     }
+                    $header.append(h);
 
                     $log.find('.body').text(data.Data.Body);
+
+                    $curl.text(data.Curl);
                 });
 
                 return false;
@@ -236,7 +318,7 @@
 
             $('.clear').on('click', function () {
                 $history.empty();
-                order = 0;
+                requests.storage = [];
             });
 
             $('input[name="url"]').focus();
