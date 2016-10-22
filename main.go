@@ -13,6 +13,7 @@ import (
 	c4 "github.com/simpleelegant/devtools/components/http_request"
 	c6 "github.com/simpleelegant/devtools/components/image_convert"
 	c1 "github.com/simpleelegant/devtools/components/index"
+	c7 "github.com/simpleelegant/devtools/components/kubernetes_dashboard"
 
 	"github.com/gin-gonic/gin"
 	"github.com/skratchdot/open-golang/open"
@@ -33,6 +34,7 @@ func main() {
 		c4.Route(r)
 		c5.Route(r)
 		c6.Route(r)
+		c7.Route(r)
 	}
 
 	addr := fmt.Sprintf("0.0.0.0:%v", conf.Options.Port)
