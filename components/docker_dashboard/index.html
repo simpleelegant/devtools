@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Docker 控制面板 - devtools</title>
+    <style media="screen">
+        html { height: 100%; }
+        body {
+            height: 100%;
+            font-family: 'Microsoft Yahei', sans-serif;
+            margin: 0;
+            position: relative;
+        }
+        table {
+            border: 1px solid #CCC;
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th {
+            border: 1px solid #CCC;
+            background-color: aliceblue;
+            white-space: nowrap;
+            text-align:left;
+            padding: 4px;
+        }
+        tbody tr:hover { background-color: powderblue; }
+
+        td {
+            border: 1px solid #CCC;
+            padding: 4px;
+            word-break: break-word;
+            font-family: monospace;
+        }
+        label { font-weight: bold; }
+
+        a {
+            text-decoration: none;
+            cursor: pointer;
+        }
+        input[type="text"] {
+            font-family: monospace;
+            margin-right: 10px;
+            width: 360px;
+        }
+
+        .page-title {
+            font-weight: bold;
+            margin: 0 0 8px 60px;
+            font-size: 120%;
+        }
+        .panel { display: none; }
+        .empty {
+            font-size: 400%;
+            text-align: center;
+            color: #BEBEBE;
+            padding: 50px 0;
+        }
+        .toolbar { display: none; }
+        .head-tip { font-weight: normal; color: gray; margin-left: 20px; }
+        .head-tip code { font-size: 1.5em; }
+        .btn {
+            display: inline-block;
+            font-weight: normal;
+            background-color: dimgray;
+            color: #FFF;
+            margin: 2px 0;
+            padding: 2px 4px;
+            border-radius: 2px;
+            box-shadow: 1px 1px 1px #000;
+        }
+
+        .btn:hover { background-color: black; }
+        #back-to-top {
+            display: block;
+            color: #FFF;
+            background-color: darkkhaki;
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 14px;
+            width: 100px;
+            line-height: 100px;
+            text-align: center;
+            border-radius: 50px;
+            box-shadow: 0px 0px 7px 0px #2D2D2D;
+        }
+        #back-to-top:hover {
+            background-color: rgb(182, 177, 104);
+        }
+
+        .right {
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body id="top">
+    <script src="/jquery.min.js"></script>
+    <script src="index.js"></script>
+    <div style="padding: 8px;"><a href="../">&lt; 返回</a></div>
+    <div class="page-title">Docker 控制面板</div>
+    <div style="margin:10px;">
+        <form action="" method="post">
+            <div style="background-color: bisque; padding: 20px;">
+                <label>Docker API Server:</label>
+                <input type="text" name="docker_api_server" placeholder="https://abc.example.com:2375/" />
+                <a class="btn" id="get-images">Get Images</a>
+            </div>
+        </form>
+
+        <!-- sub-page 1 -->
+        <div id="images-panel" class="panel">
+            <h3> Images: <span class="head-tip">total <code></code></span></h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Image ID</th>
+                        <th>Created</th>
+                        <th>Size</th>
+                        <th>Repo Tags</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-id="">
+                        <td class="order"></td>
+                        <td class="image-id"></td>
+                        <td class="created"></td>
+                        <td class="right size"></td>
+                        <td class="repo-tags"></td>
+                        <td>
+                            <a class="btn inspect" onclick="custom.inspectImage(this);">Inspect</a>
+                            <a class="btn delete" onclick="custom.deleteImage(this);">Delete</a>
+                        </td>
+                    </tr>
+                </tbody>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Image ID</th>
+                        <th>Created</th>
+                        <th>Size</th>
+                        <th>Repo Tags</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <!-- sub-page 2 -->
+        <div id="image-panel" class="panel">
+            <div class="toolbar">
+                <a class="btn delete">Delete this image</a>
+            </div>
+            <h3>Inspect image: <span class="head-tip">id: <code></code></span></h3>
+            <pre><code></code></pre>
+        </div>
+
+    </div>
+    <div style="height: 60px;">
+        <a id="back-to-top" href="#top">Back to top</a>
+    </div>
+</body>
+
+</html>

@@ -8,6 +8,7 @@ import (
 	"github.com/simpleelegant/devtools/plugins/network"
 
 	c5 "github.com/simpleelegant/devtools/components/data_convert"
+	c8 "github.com/simpleelegant/devtools/components/docker_dashboard"
 	c2 "github.com/simpleelegant/devtools/components/documents_service"
 	c3 "github.com/simpleelegant/devtools/components/http_log"
 	c4 "github.com/simpleelegant/devtools/components/http_request"
@@ -35,6 +36,7 @@ func main() {
 		c5.Route(r)
 		c6.Route(r)
 		c7.Route(r)
+		c8.Route(r)
 	}
 
 	addr := fmt.Sprintf("0.0.0.0:%v", conf.Options.Port)
