@@ -33,10 +33,10 @@ func Route(r *gin.Engine) {
 			output, err = jsonIndent(input)
 		case "jsonCompact":
 			output, err = jsonCompact(input)
-		case "base64Encode":
-			output, err = base64Encode(input)
-		case "base64Decode":
-			output, err = base64Decode(input)
+		case "base64URLEncode":
+			output, err = base64URLEncode(input)
+		case "base64URLDecode":
+			output, err = base64URLDecode(input)
 		case "md5Checksum":
 			output, err = md5Checksum(input)
 		case "jsonToGoStruct":
@@ -47,6 +47,10 @@ func Route(r *gin.Engine) {
 			output, err = keyValueToJSON(input)
 		case "markdownToHTML":
 			output, err = markdownToHTML(input)
+		case "escapeNewline":
+			output, err = escapeNewline(input)
+		case "captureNewline":
+			output, err = captureNewline(input)
 		default:
 			err = errors.New("Not supported")
 		}
@@ -80,14 +84,14 @@ func jsonCompact(input string) (string, error) {
 	return out.String(), err
 }
 
-func base64Encode(input string) (string, error) {
-	encoded := base64.StdEncoding.EncodeToString([]byte(input))
+func base64URLEncode(input string) (string, error) {
+	encoded := base64.URLEncoding.EncodeToString([]byte(input))
 
 	return encoded, nil
 }
 
-func base64Decode(input string) (string, error) {
-	decoded, err := base64.StdEncoding.DecodeString(input)
+func base64URLDecode(input string) (string, error) {
+	decoded, err := base64.URLEncoding.DecodeString(input)
 
 	return string(decoded), err
 }
@@ -125,4 +129,13 @@ func keyValueToJSON(input string) (string, error) {
 	}
 
 	return string(b), nil
+}
+
+func escapeNewline(input string) (string, error) {
+	input = strings.Replace(input, "\r\n", "\n", -1)
+	return strings.Replace(input, "\n", "\\n", -1), nil
+}
+
+func captureNewline(input string) (string, error) {
+	return strings.Replace(input, "\\n", "\n", -1), nil
 }

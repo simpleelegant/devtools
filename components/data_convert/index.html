@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>数据转换 - devtools</title>
+    <title>Data Conversion, 数据转换 - devtools</title>
     <style media="screen">
         html {
             height: 100%;
@@ -88,30 +88,32 @@
 
 <body>
     <script src="/jquery.min.js"></script>
-    <div style="padding: 8px;"><a href="../">&lt; 返回</a></div>
-    <div class="page-title">数据转换</div>
+    <div style="padding: 8px;"><a href="../">&lt; Return, 返回</a></div>
+    <div class="page-title">Data Conversion, 数据转换</div>
 
     <div class="input-ctn">
         <a class="btn" onclick="convert('jsonIndent');">JSON Indent</a>
         <a class="btn" onclick="convert('jsonCompact');">JSON Compact</a>
-        <a class="btn" onclick="convert('base64Encode');" title="base64 encode, with all leading and trailing white space removed, as defined by Unicode.">Base64 Encode</a>
-        <a class="btn" onclick="convert('base64Decode');">Base64 Decode</a>
+        <a class="btn" onclick="convert('base64URLEncode');" title="base64 URL-encoding, with all leading and trailing white space removed, as defined by Unicode.">Base64 URL-encode</a>
+        <a class="btn" onclick="convert('base64URLDecode');">Base64 URL-decode</a>
         <a class="btn" onclick="convert('md5Checksum');" title="compute MD5 checksum, with all leading and trailing white space removed, as defined by Unicode.">MD5 Checksum</a>
         <a class="btn" onclick="convert('jsonToGoStruct');" title="input JSON string, but output a struct of Go language">JSON to Go struct</a>
         <a class="btn" onclick="convert('jsonToYAML');" title="input JSON string, but output YAML">JSON to YAML</a>
         <a class="btn keyValueToJSON" onclick="convert('keyValueToJSON');">key=value to JSON</a>
         <a class="btn" onclick="convert('markdownToHTML');" title="input markdown text, but output HTML code with simple style.">markdown to HTML</a>
-        <div class="label" style="margin-top: 8px;"><a class="action clear">清空</a>输入区域：</div>
+        <a class="btn" onclick="convert('escapeNewline');" title="">escape newline to \n</a>
+        <a class="btn" onclick="convert('captureNewline');" title="">capture \n to newline</a>
+        <div class="label" style="margin-top: 8px;"><a class="action clear">clean, 清空</a>Input Area, 输入区域：</div>
         <form class="input">
             <input type="hidden" name="ability" value="">
             <textarea name="input" rows="8" cols="40" placeholder="请在这里输入..."></textarea>
         </form>
     </div>
 
-    <a class="btn copy-output-to-input" title="将“处理结果”复制到“输入区域”">&lt;&lt;</a>
+    <a class="btn copy-output-to-input" title="copy from right to left, 将“处理结果”复制到“输入区域”">&lt;&lt;</a>
 
     <div class="output-ctn">
-        <div class="label"><a class="action copy">复制</a>处理结果：</div>
+        <div class="label"><a class="action copy">copy, 复制</a>Output Area, 处理结果：</div>
         <textarea name="output" rows="8" cols="40" readonly></textarea>
     </div>
 
@@ -148,8 +150,8 @@
                     $output.select();
                     document.execCommand('copy');
 
-                    $this.text('已复制');
-                    setTimeout(function(){ $this.text('复制'); }, 1000);
+                    $this.text('copied, 已复制');
+                    setTimeout(function(){ $this.text('copy, 复制'); }, 1000);
                 } catch (err) {
                     alert(fails);
                 }
