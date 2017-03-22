@@ -156,8 +156,9 @@ func (c *Client) DeletePods(namespace string, opt *DeletePodsOptions) error {
 		return err
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	req.Close = true
+
+	resp, err := new(http.Client).Do(req)
 	if err != nil {
 		return err
 	}
@@ -193,9 +194,10 @@ func (c *Client) DeletePod(namespace, name string, opt *DeleteOptions) error {
 		return err
 	}
 
+	req.Close = true
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
+
+	resp, err := new(http.Client).Do(req)
 	if err != nil {
 		return err
 	}

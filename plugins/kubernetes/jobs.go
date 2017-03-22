@@ -12,53 +12,19 @@ import (
 // ErrNotFound represent resource not found
 var ErrNotFound = errors.New("Not Found")
 
-// CreateJob create a job
-func (c *Client) CreateJob(namespace string, job *Job) error {
-	path := fmt.Sprintf("apis/batch/v1/namespaces/%s/jobs", namespace)
-
-	r, err := ToJSONReader(job)
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Post(c.BaseURL+path, JSONContentType, r)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	// decode body
-	if resp.StatusCode != http.StatusCreated {
-		s := new(Status)
-		if err := json.Unmarshal(b, s); err != nil {
-			return errors.New(string(b))
-		}
-
-		return errors.New(s.Message)
-	}
-
-	return json.Unmarshal(b, job)
-}
-
 // DeleteJob delete a job
 func (c *Client) DeleteJob(namespace string, name string) error {
 	path := fmt.Sprintf("apis/batch/v1/namespaces/%s/jobs/%s", namespace, name)
-
-	client := &http.Client{}
 
 	req, err := http.NewRequest(http.MethodDelete, c.BaseURL+path, nil)
 	if err != nil {
 		return err
 	}
 
+	req.Close = true
 	req.Header.Add("Content-Type", JSONContentType)
 
-	resp, err := client.Do(req)
+	resp, err := new(http.Client).Do(req)
 	if err != nil {
 		return err
 	}
