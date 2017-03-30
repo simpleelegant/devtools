@@ -10,164 +10,188 @@ import (
 	k "github.com/simpleelegant/devtools/plugins/kubernetes"
 )
 
-func getJobs(c *gin.Context) {
-	namespace := strings.TrimSpace(c.PostForm("namespace"))
-	labelSelector := strings.TrimSpace(c.PostForm("labelSelector"))
-	client, ok := getKubernetesClient(c)
-	if !ok {
-		return
+func listJobs(c *gin.Context) (int, interface{}) {
+	namespace := formValue(c, "namespace")
+	labelSelector := formValue(c, "labelSelector")
+	client, err := getClient(c)
+	if err != nil {
+		return http.StatusBadRequest, err
 	}
 
 	jobs, err := client.GetJobs(namespace, labelSelector)
 	if err != nil {
-		response(c, err.Error(), nil)
-		return
+		return http.StatusBadRequest, err
 	}
 
-	response(c, "", jobs)
+	var res []map[string]interface{}
+	for _, j := range jobs.Items {
+		r := map[string]interface{}{
+			"namespace":         j.Metadata.Namespace,
+			"name":              j.Metadata.Name,
+			"creationTimestamp": j.Metadata.CreationTimestamp,
+		}
+
+		if j.Status != nil {
+			r["succeeded"] = j.Status.Succeeded
+		} else {
+			r["succeeded"] = 0
+		}
+
+		res = append(res, r)
+	}
+
+	return http.StatusOK, res
 }
 
-func describeJob(c *gin.Context) {
-	name := strings.TrimSpace(c.PostForm("name"))
-	namespace := strings.TrimSpace(c.PostForm("namespace"))
-	client, ok := getKubernetesClient(c)
-	if !ok {
-		return
+func listPods(c *gin.Context) (int, interface{}) {
+	namespace := formValue(c, "namespace")
+	labelSelector := formValue(c, "labelSelector")
+	client, err := getClient(c)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	pods, err := client.ListObjectsOfKindPod(namespace,
+		&k.ListObjectsOfKindPodOptions{LabelSelector: labelSelector})
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	var res []map[string]interface{}
+	for _, p := range pods.Items {
+		res = append(res, map[string]interface{}{
+			"namespace":         p.Metadata.Namespace,
+			"name":              p.Metadata.Name,
+			"creationTimestamp": p.Metadata.CreationTimestamp,
+			"nodeName":          p.Spec.NodeName,
+		})
+	}
+
+	return http.StatusOK, res
+}
+
+func describeJob(c *gin.Context) (int, interface{}) {
+	namespace := formValue(c, "namespace")
+	name := formValue(c, "name")
+	client, err := getClient(c)
+	if err != nil {
+		return http.StatusBadRequest, err
 	}
 
 	// get job
 	job, err := client.GetJob(namespace, name)
 	if err != nil {
-		if err == k.ErrNotFound {
-			err = errors.New("Job not found")
-		}
-		response(c, err.Error(), nil)
-		return
+		return http.StatusBadRequest, err
 	}
+
 	jobJSON, err := json.MarshalIndent(job, "", "    ")
 	if err != nil {
-		response(c, err.Error(), nil)
-		return
+		return http.StatusBadRequest, err
 	}
 
 	// get pods
-	podList, err := client.ListObjectsOfKindPod(
-		namespace,
+	pods, err := client.ListObjectsOfKindPod(namespace,
 		&k.ListObjectsOfKindPodOptions{LabelSelector: "job-name=" + name})
 	if err != nil {
-		response(c, err.Error(), nil)
-		return
+		return http.StatusBadRequest, err
 	}
 
-	response(c, "", map[string]interface{}{
-		"Job":     string(jobJSON),
-		"PodList": podList,
-	})
+	return http.StatusOK, map[string]interface{}{
+		"job":  string(jobJSON),
+		"pods": pods,
+	}
 }
 
-func describePod(c *gin.Context) {
-	name := strings.TrimSpace(c.PostForm("name"))
-	namespace := strings.TrimSpace(c.PostForm("namespace"))
-	client, ok := getKubernetesClient(c)
-	if !ok {
-		return
+func describePod(c *gin.Context) (int, interface{}) {
+	namespace := formValue(c, "namespace")
+	name := formValue(c, "name")
+	client, err := getClient(c)
+	if err != nil {
+		return http.StatusBadRequest, err
 	}
 
 	// get pod
 	pod, err := client.GetPod(namespace, name)
 	if err != nil {
-		if err == k.ErrNotFound {
-			err = errors.New("Pod not found")
-		}
-		response(c, err.Error(), nil)
-		return
+		return http.StatusBadRequest, err
 	}
+
 	podJSON, err := json.MarshalIndent(pod, "", "    ")
 	if err != nil {
-		response(c, "Fail to get logs: "+err.Error(), nil)
-		return
+		return http.StatusBadRequest, err
 	}
 
 	// get logs
 	logs, err := client.GetPodLog(namespace, name, &k.GetPodLogOptions{})
 	if err != nil {
-		response(c, err.Error(), nil)
-		return
+		return http.StatusBadRequest, err
 	}
 
-	response(c, "", map[string]interface{}{
-		"Pod":  string(podJSON),
-		"Logs": logs,
-	})
+	return http.StatusOK, map[string]interface{}{
+		"pod":  string(podJSON),
+		"logs": logs,
+	}
 }
 
-func deleteJob(c *gin.Context) {
-	name := strings.TrimSpace(c.PostForm("name"))
-	namespace := strings.TrimSpace(c.PostForm("namespace"))
-	client, ok := getKubernetesClient(c)
-	if !ok {
-		return
+func deleteJob(c *gin.Context) (int, interface{}) {
+	namespace := formValue(c, "namespace")
+	name := formValue(c, "name")
+	client, err := getClient(c)
+	if err != nil {
+		return http.StatusBadRequest, err
 	}
 
 	// delete job
-	err := client.DeleteJob(namespace, name)
-	switch err {
-	case nil:
-		// delete relatied pods
-		err := client.DeletePods(namespace, &k.DeletePodsOptions{LabelSelector: "job-name=" + name})
-		if err != nil {
-			response(c, err.Error(), nil)
-			return
-		}
+	if err := client.DeleteJob(namespace, name); err != nil {
+		return http.StatusBadRequest, err
+	}
 
-		response(c, "", nil)
-	case k.ErrNotFound:
-		response(c, "Job not found", nil)
+	// delete relatied pods
+	err = client.DeletePods(namespace, &k.DeletePodsOptions{LabelSelector: "job-name=" + name})
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	return http.StatusOK, "ok"
+}
+
+func deletePod(c *gin.Context) (int, interface{}) {
+	namespace := formValue(c, "namespace")
+	name := formValue(c, "name")
+	client, err := getClient(c)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	err = client.DeletePod(namespace, name, &k.DeleteOptions{GracePeriodSeconds: 0})
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	return http.StatusOK, "ok"
+}
+
+func formValue(c *gin.Context, key string) string {
+	return strings.TrimSpace(c.Request.FormValue(key))
+}
+
+func getClient(c *gin.Context) (*k.Client, error) {
+	host := formValue(c, "server")
+	if host == "" {
+		return nil, errors.New("Kubernetes API Server must be not empty")
+	}
+
+	host = strings.ToLower(host)
+	switch {
+	case strings.HasPrefix(host, "http://"):
+	case strings.HasPrefix(host, "https://"):
 	default:
-		response(c, err.Error(), nil)
-	}
-}
-
-func deletePod(c *gin.Context) {
-	name := strings.TrimSpace(c.PostForm("name"))
-	namespace := strings.TrimSpace(c.PostForm("namespace"))
-	client, ok := getKubernetesClient(c)
-	if !ok {
-		return
+		host = "http://" + host
 	}
 
-	err := client.DeletePod(namespace, name, &k.DeleteOptions{GracePeriodSeconds: 0})
-	switch err {
-	case nil:
-		response(c, "", nil)
-	case k.ErrNotFound:
-		response(c, "Pod not found", nil)
-	default:
-		response(c, err.Error(), nil)
-	}
-}
-
-func response(c *gin.Context, errorMessage string, data interface{}) {
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"Error": errorMessage,
-		"Data":  data,
-	})
-}
-
-func getKubernetesClient(c *gin.Context) (client *k.Client, ok bool) {
-	addr := strings.TrimSpace(c.PostForm("kubernetes_api_server"))
-	if addr == "" {
-		response(c, "Kubernetes API Server must be not empty", nil)
-		return
+	if !strings.HasSuffix(host, "/") {
+		host += "/"
 	}
 
-	a := strings.ToLower(addr)
-	if !strings.HasPrefix(a, "http://") && !strings.HasPrefix(a, "https://") {
-		addr = "http://" + addr
-	}
-	if !strings.HasSuffix(addr, "/") {
-		addr += "/"
-	}
-
-	return &k.Client{BaseURL: addr}, true
+	return &k.Client{BaseURL: host}, nil
 }

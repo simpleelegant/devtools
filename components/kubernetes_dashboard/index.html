@@ -37,14 +37,11 @@
         }
         label { font-weight: bold; }
 
-        a {
-            text-decoration: none;
-            cursor: pointer;
-        }
+        a { text-decoration: none; cursor: pointer; }
         input[type="text"] {
             font-family: monospace;
             margin-right: 10px;
-            width: 360px;
+            width: 280px;
         }
 
         .page-title {
@@ -88,9 +85,7 @@
             border-radius: 50px;
             box-shadow: 0px 0px 7px 0px #2D2D2D;
         }
-        #back-to-top:hover {
-            background-color: rgb(182, 177, 104);
-        }
+        #back-to-top:hover { background-color: rgb(182, 177, 104); }
     </style>
 </head>
 
@@ -103,17 +98,19 @@
         <form action="" method="post">
             <div style="background-color: bisque; padding: 20px;">
                 <label>Kubernetes API Server:</label>
-                <input type="text" name="kubernetes_api_server" placeholder="https://abc.example.com:8080/" />
+                <input type="text" name="server" placeholder="https://abc.example.com:8080/" />
                 <label>Namespace:</label>
                 <input type="text" name="namespace" placeholder="optional" />
                 <label>LabelSelector:</label>
                 <input type="text" name="labelSelector" placeholder="optional" />
                 <a class="btn" id="search-jobs">Search Jobs</a>
+                or
+                <a class="btn" id="search-pods">Search Pods</a>
             </div>
         </form>
 
-        <!-- sub-page 1 -->
-        <div id="jobs-panel" class="panel">
+        <!-- sub-page -->
+        <div id="list-jobs-panel" class="panel">
             <div class="toolbar">
                 <a class="btn delete-jobs-btn">删除本页中所有Job (先创建的先删除。随时可以取消。)</a>
                 <a class="btn cancel" style="display:none;">Waiting...</a>
@@ -139,8 +136,7 @@
                         <td class="creationTimestamp"></td>
                         <td class="succeeded"></td>
                         <td>
-                            <a class="btn" onclick="custom.describeJobAndPods(this);">Describe &amp; Pods</a>
-                            <a class="btn delete" onclick="custom.deleteJob(this);">Delete with pods</a>
+                            <a class="btn detail" href="">Describe &amp; Pods</a>
                         </td>
                     </tr>
                 </tbody>
@@ -157,8 +153,49 @@
             </table>
         </div>
 
-        <!-- sub-page 2 -->
-        <div id="job-panel" class="panel">
+        <!-- sub-page -->
+        <div id="list-pods-panel" class="panel">
+            <div class="toolbar">
+                <a class="btn delete-pods-btn">删除本页中所有 pod (先创建的先删除。随时可以取消。)</a>
+                <a class="btn cancel" style="display:none;">Waiting...</a>
+                <a class="btn result" style="display:none;"></a>
+            </div>
+            <h3> Pods: <span class="head-tip">total <code></code></span></h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Creation Timestamp</th>
+                        <th>Node</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-name="" data-namespace="">
+                        <td class="order"></td>
+                        <td class="name"></td>
+                        <td class="creationTimestamp"></td>
+                        <td class="node"></td>
+                        <td>
+                            <a class="btn detail" href="">Describe &amp; Logs</a>
+                        </td>
+                    </tr>
+                </tbody>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Creation Timestamp</th>
+                        <th>Node</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <!-- sub-page -->
+        <div id="describe-job-panel" class="panel">
             <div class="toolbar">
                 <a href="#pod-list-table" class="btn" style="">Jump to Pod List</a>
                 <a class="btn delete-job-btn">Delete this job with pods</a>
@@ -184,8 +221,7 @@
                             <td class="creationTimestamp"></td>
                             <td class="node"></td>
                             <td>
-                                <a class="btn" onclick="custom.describePodAndLogs(this);">Describe &amp; Logs</a>
-                                <a class="btn" onclick="custom.deletePod(this);">Delete</a>
+                                <a class="btn detail" href="">Describe &amp; Logs</a>
                             </td>
                         </tr>
                     </tbody>
@@ -202,8 +238,8 @@
             </div>
         </div>
 
-        <!-- sub-page 3 -->
-        <div id="pod-panel" class="panel">
+        <!-- sub-page -->
+        <div id="describe-pod-panel" class="panel">
             <div class="toolbar">
                 <a href="#pod-logs" class="btn">Jump to Logs</a>
                 <a class="btn delete-pod-btn">Delete this pod</a>
