@@ -45,6 +45,10 @@ func listJobs(c *gin.Context) (int, interface{}) {
 
 func listPods(c *gin.Context) (int, interface{}) {
 	namespace := formValue(c, "namespace")
+	if namespace == "" {
+		namespace = "default"
+	}
+
 	labelSelector := formValue(c, "labelSelector")
 	client, err := getClient(c)
 	if err != nil {
